@@ -20,68 +20,74 @@ They are included based on the distribution of the target system.
 ### Global
 These variables are in `defaults/main.yml`.
 
+`tomcat_user` and `tomcat_group` are system user and system group to be created and apache tomcat will run under.
 
-`nginx_sites` is the list of the siets to be generated to the `{{ nging_dir_etc }}/sites-available`. 
+`tomcat_download_prefix` is the URL which is prefixed to all downloads. I downloaded all packages on local server. It could be _http://download.acme.org/java_.
 
-    nginx_sites:
-     - name: test
-       state: enabled
+`tomcat_install_dir` si the directory name where to install apache tomcat.
 
+`tomcat_download_dir` is the directory where to download the tar.gz file.
 
-`nginx_conf_d` is the list of the file to be copies and enabled
+`tomcat_list` is he ist of available tomcat version. This is allows youto install different versions of the tomcat to different servers.  This variable could be global to all hosts.
 
-    nginx_conf_d:
-     - name: basic.conf
-       state: enabled 
+    tomcat_list:
+      v7.0.52:
+        filename: 'apache-tomcat/7.0.52/apache-tomcat-7.0.52.tar.gz'
+        dirname: 'apache-tomcat-7.0.52'
+      v7.0.55:
+        filename: 'apache-tomcat/7.0.55/apache-tomcat-7.0.55.tar.gz'
+        dirname: 'apache-tomcat-7.0.55'
+      v8.0.9:
+       filename: 'apache-tomcat/8.0.9/apache-tomcat-8.0.9.tar.gz'
+       dirname: 'apache-tomcat-8.0.9'
 
+where 
 
-`nginx_conf_main_include` is the list of the files to be included in the main configuration file. The **http** sesction
-is also include file.
+- **filename** is the location of the tar.gz file. The `tomcat_download_prefix` will be prepended.
+- **dirname** is the created directory after unpacking
 
-    nginx_conf_main_include:
-     - modules/http.conf
+`tomcat_version` is the key from the `tomcat_list.`
 
+I put **work**, **webapps** and **access logs** into `tomcat_apps_dir`, which is outside of the instalation directory of the tomcat.
 
-`nginx_file_extra` is the list of the files to be copies to `{{ nginx_dir_etc }}` expept fthe main configurtion file.
+in `tomcat_extra_libs` put some extra librarries, which should be shared with all applications of youneed them to configure tomcat. for example _JMX_
 
-    nginx_file_extra:
-     - src: modules/http.conf
-       dest: modules/http.conf
-       state: enabled
-     - src: modules/mail.conf
-       dest: modules/mail.conf
-       state: disabled
+    tomcat_extra_libs:
+      - state: enabled
+        src: apache-tomcat/7.0.55/catalina-jmx-remote.jar
+        dest: lib/catalina-jmx-remote.jar
 
+where
 
-`nginx_dir_extra` list of the extra directoris to be created. For example for the mail module.
+- **state** is enabled and disabled. The file downloaded form URL (prefixed by `tomcat_download_dir`) of removed from the _dest_
+- **src**, **dest** are self explanatory
 
-    nginx_dir_extra:
-     - name: mail.d
-       owner: root
-       group: root
-       mode: '0750'
+`tomcat_extra_conf` is the same as `tomcat_extra_libs`, but the files are search in role template directory
 
-## Site configuration
-In the **templates/sites/tmpl** I have included some templates which could be helpfull to create site configs.
+`tomcat_catalina_opts` is an array of CATALINA_OPTS to be added into **setenv.sh**
 
-    upstream upstream_site_test {
-      ip_hash;
-      server 192.168.10.10:80;
-      server 192.168.10.10:80;
-    }
+`tomcat_java_opts` is an array of JAVA_OPTS to be added into **setenv.sh**
 
-    server {
-      listen *:443;
-      server_name	test.test.sk;
+if `tomcat_java_home` is set, it will be used as JAVA_HOME
 
-      {% include 'tmpl/log_upstream.conf' %}
-      {% include 'tmpl/ssl.conf' %}
-      {% include 'tmpl/proxy_headers.conf' %}
+`tomcat_config_template` determined the server.xml template to be used.
 
-      location / {
-        proxy_redirect     off;
-        proxy_set_header Host $host;
-        proxy_pass http://upstream_site_test;
-      }
-    }
+`tomcat_dir_prefix` id defaults the **.** which meas all templates files will be searched in role firecotry. I'm using this variable to separate the template files form the role while I'm using this role on more projects and different teams. Ypu can put here absolute or relative path.
 
+### Server.xml
+I added an example _server.xml_ fie as **conf/server_default.j2**. As I said, it's very hard to write universal server.xml, so I decided to use includes and the `tomcat_config_template`  variable (defaults: default).
+
+    <?xml version='1.0' encoding='utf-8'?>
+    <!-- {{ ansible_managed }} -->
+    {% include 'server/server_default_start.j2' %}
+    {% include 'server/listener_default.j2' %}
+    {% include 'server/service_default_start.j2' %}
+    {% include 'server/connector_default_http.j2' %}
+    {% include 'server/connector_default_ajp.j2' %}
+    {% include 'server/engine_default_start.j2' %}
+    {% include 'server/host_default_start.j2' %}
+    {% include 'server/valve_log_default.j2' %}
+    {% include 'server/host_end.j2' %}
+    {% include 'server/engine_stop.j2' %}
+    {% include 'server/service_end.j2' %}
+    {% include 'server/server_end.j2' %}
