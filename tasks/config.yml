@@ -18,13 +18,13 @@
   tags: [ tomcat, config ]
 
 - name: "copy extra configs"
-  action: template src={{ tomcat_dir_prefix }}/{{ item.src }} dest={{ tomcat_install_dir }}/{{ tomcat_list[tomcat_version]['dirname'] }}/{{ item.dest }} mode={{ item.mode }} owner={{ tomcat_user }} group={{ tomcat_group }} 
+  action: template src={{ tomcat_dir_prefix }}/{{ item.src }} dest={{ tomcat_install_dir }}/{{ tomcat_list[tomcat_version]['dirname'] }}/{{ item.dest }} mode={{ item.mode }} owner={{ tomcat_user }} group={{ tomcat_group }}
   with_items: tomcat_extra_conf
   when: "item.state == 'enabled'"
   tags: [ tomcat, config ]
 
 - name: "remove extra libs"
-  action: file path={{ tomcat_install_dir }}/{{ tomcat_list[tomcat_version]['dirname'] }}/{{ item.dest }} state=absent 
+  action: file path={{ tomcat_install_dir }}/{{ tomcat_list[tomcat_version]['dirname'] }}/{{ item.dest }} state=absent
   with_items: tomcat_extra_conf
   when: "item.state != 'enabled'"
   tags: [ tomcat, config ]
