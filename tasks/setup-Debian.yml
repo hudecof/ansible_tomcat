@@ -2,5 +2,4 @@
 - name: "check packages (debian)"
   action: apt pkg={{ item }} state=present
   tags: [ tomcat, setup ]
-  with_items: tomcat_packages
-
+  with_items: "{{ tomcat_packages }}"
