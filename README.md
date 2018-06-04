@@ -75,10 +75,10 @@ if `tomcat_java_home` is set, it will be used as JAVA_HOME
 `tomcat_dir_prefix` id defaults the **.** which meas all templates files will be searched in role firecotry. I'm using this variable to separate the template files form the role while I'm using this role on more projects and different teams. Ypu can put here absolute or relative path.
 
 ### Server.xml
-I added an example _server.xml_ fie as **conf/server_default.j2**. As I said, it's very hard to write universal server.xml, so I decided to use includes and the `tomcat_config_template`  variable (defaults: default).
+I added an example _server.xml_ file as **conf/server_default.j2**. As I said, it's very hard to write universal server.xml, so I decided to use includes and the `tomcat_config_template`  variable (defaults: default).
 
     <?xml version='1.0' encoding='utf-8'?>
-    <!-- {{ ansible_managed }} -->
+    {{ ansible_managed | comment('xml') }}
     {% include 'server/server_default_start.j2' %}
     {% include 'server/listener_default.j2' %}
     {% include 'server/service_default_start.j2' %}
